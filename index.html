@@ -960,6 +960,21 @@ button {
   </div>
 </div>
 
+<iframe name="leadSubmitFrame" id="leadSubmitFrame" style="display:none;" title="Hidden lead submit frame"></iframe>
+<form
+  id="leadForm"
+  action="https://script.google.com/macros/s/AKfycbwn0QnJ3LW-y-zDqj-MF4JQCyE9EhurY2xnOyo_EE8m1iOCPm5C3_Px03jIqyNzN8eKtg/exec"
+  method="POST"
+  target="leadSubmitFrame"
+  style="display:none;"
+>
+  <input type="hidden" name="phoneNumber" id="leadPhoneField">
+  <input type="hidden" name="route" id="leadRouteField">
+  <input type="hidden" name="price" id="leadPriceField">
+  <input type="hidden" name="source" value="tranzito-webapp">
+  <input type="hidden" name="timestamp" id="leadTimestampField">
+</form>
+
 <script>
 const splashScreen = document.getElementById("splashScreen");
 const priceScreen = document.getElementById("priceScreen");
@@ -973,9 +988,13 @@ const leadCloseBtn = document.getElementById("leadCloseBtn");
 const leadPhoneInput = document.getElementById("leadPhoneInput");
 const leadRouteLabel = document.getElementById("leadRouteLabel");
 const leadStatus = document.getElementById("leadStatus");
+const leadForm = document.getElementById("leadForm");
+const leadPhoneField = document.getElementById("leadPhoneField");
+const leadRouteField = document.getElementById("leadRouteField");
+const leadPriceField = document.getElementById("leadPriceField");
+const leadTimestampField = document.getElementById("leadTimestampField");
 
 const introDuration = 3600;
-const GOOGLE_SHEETS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwn0QnJ3LW-y-zDqj-MF4JQCyE9EhurY2xnOyo_EE8m1iOCPm5C3_Px03jIqyNzN8eKtg/exec";
 const routeData = [
   {
     badge: "Lowest Price Today",
@@ -1000,6 +1019,7 @@ let activeLeadRoute = "";
 let activeLeadPrice = "";
 let leadSaveTimeoutId = null;
 let leadSaving = false;
+let leadSaved = false;
 
 function showScreen(screenToShow) {
   [splashScreen, priceScreen].forEach((screen) => {
@@ -1021,6 +1041,7 @@ function setTodayDate() {
 function openLeadModal(route, price) {
   activeLeadRoute = route;
   activeLeadPrice = price;
+  leadSaved = false;
   leadRouteLabel.textContent = route + " - " + price;
   leadPhoneInput.value = "";
   leadStatus.textContent = "";
@@ -1042,13 +1063,7 @@ function sanitizePhone(value) {
 }
 
 async function saveLeadToGoogleSheets(phoneNumber) {
-  if (leadSaving) {
-    return;
-  }
-
-  if (GOOGLE_SHEETS_WEB_APP_URL === "PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") {
-    leadStatus.textContent = "Paste your Google Sheets web app URL in the script first.";
-    leadStatus.className = "lead-status error";
+  if (leadSaving || leadSaved) {
     return;
   }
 
@@ -1057,25 +1072,12 @@ async function saveLeadToGoogleSheets(phoneNumber) {
   leadStatus.className = "lead-status";
 
   try {
-    const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
-      method: "POST",
-      mode: "cors",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        phoneNumber,
-        route: activeLeadRoute,
-        price: activeLeadPrice,
-        source: "tranzito-webapp",
-        timestamp: new Date().toISOString()
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to save lead");
-    }
-
+    leadPhoneField.value = phoneNumber;
+    leadRouteField.value = activeLeadRoute;
+    leadPriceField.value = activeLeadPrice;
+    leadTimestampField.value = new Date().toISOString();
+    leadForm.submit();
+    leadSaved = true;
     leadStatus.textContent = "Saved successfully.";
     leadStatus.className = "lead-status success";
     window.setTimeout(() => {
