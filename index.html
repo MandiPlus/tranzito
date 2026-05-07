@@ -632,6 +632,120 @@ button {
   line-height: 1.55;
 }
 
+.lead-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(20, 22, 26, 0.42);
+  backdrop-filter: blur(6px);
+}
+
+.lead-modal.open {
+  display: flex;
+}
+
+.lead-panel {
+  width: min(100%, 420px);
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(18, 28, 45, 0.18);
+  padding: 20px 18px 18px;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: transform 0.22s ease, opacity 0.22s ease;
+}
+
+.lead-modal.open .lead-panel {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.lead-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lead-title {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 24px;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+.lead-route {
+  margin-top: 6px;
+  color: var(--text-soft);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.lead-close {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.lead-copy {
+  margin: 16px 0 0;
+  color: var(--text-soft);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.lead-input {
+  width: 100%;
+  margin-top: 16px;
+  min-height: 56px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  outline: none;
+}
+
+.lead-input:focus {
+  border-color: rgba(238, 60, 38, 0.38);
+  box-shadow: 0 0 0 4px rgba(238, 60, 38, 0.08);
+}
+
+.lead-hint {
+  margin-top: 10px;
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.lead-status {
+  min-height: 20px;
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lead-status.success {
+  color: var(--green);
+}
+
+.lead-status.error {
+  color: var(--red);
+}
+
 @media (min-width: 768px) {
   .app {
     width: min(100%, 560px);
@@ -822,6 +936,30 @@ button {
   </section>
 </div>
 
+<div class="lead-modal" id="leadModal" aria-hidden="true">
+  <div class="lead-panel">
+    <div class="lead-top">
+      <div>
+        <h3 class="lead-title">Pre Book Now</h3>
+        <div class="lead-route" id="leadRouteLabel">Route</div>
+      </div>
+      <button class="lead-close" id="leadCloseBtn" type="button" aria-label="Close">×</button>
+    </div>
+    <p class="lead-copy">Enter only your phone number. It will be saved automatically, no submit button needed.</p>
+    <input
+      class="lead-input"
+      id="leadPhoneInput"
+      type="tel"
+      inputmode="numeric"
+      maxlength="10"
+      placeholder="Enter phone number"
+      autocomplete="tel"
+    >
+    <div class="lead-hint">We will save this lead to Google Sheets after 10 valid digits.</div>
+    <div class="lead-status" id="leadStatus"></div>
+  </div>
+</div>
+
 <script>
 const splashScreen = document.getElementById("splashScreen");
 const priceScreen = document.getElementById("priceScreen");
@@ -830,8 +968,14 @@ const gcaCard = document.getElementById("gcaCard");
 const tranzitoCard = document.getElementById("tranzitoCard");
 const routeSlider = document.getElementById("routeSlider");
 const routeDots = document.getElementById("routeDots");
+const leadModal = document.getElementById("leadModal");
+const leadCloseBtn = document.getElementById("leadCloseBtn");
+const leadPhoneInput = document.getElementById("leadPhoneInput");
+const leadRouteLabel = document.getElementById("leadRouteLabel");
+const leadStatus = document.getElementById("leadStatus");
 
 const introDuration = 3600;
+const GOOGLE_SHEETS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwn0QnJ3LW-y-zDqj-MF4JQCyE9EhurY2xnOyo_EE8m1iOCPm5C3_Px03jIqyNzN8eKtg/exec";
 const routeData = [
   {
     badge: "Lowest Price Today",
@@ -852,6 +996,10 @@ const routeData = [
 let activeRouteIndex = 0;
 let routeAutoplayId = null;
 let routeResumeId = null;
+let activeLeadRoute = "";
+let activeLeadPrice = "";
+let leadSaveTimeoutId = null;
+let leadSaving = false;
 
 function showScreen(screenToShow) {
   [splashScreen, priceScreen].forEach((screen) => {
@@ -870,9 +1018,75 @@ function setTodayDate() {
   });
 }
 
-function openWA(route) {
-  const phone = "9971100101";
-  window.location.href = "tel:" + phone;
+function openLeadModal(route, price) {
+  activeLeadRoute = route;
+  activeLeadPrice = price;
+  leadRouteLabel.textContent = route + " - " + price;
+  leadPhoneInput.value = "";
+  leadStatus.textContent = "";
+  leadStatus.className = "lead-status";
+  leadModal.classList.add("open");
+  leadModal.setAttribute("aria-hidden", "false");
+  window.setTimeout(() => {
+    leadPhoneInput.focus();
+  }, 80);
+}
+
+function closeLeadModal() {
+  leadModal.classList.remove("open");
+  leadModal.setAttribute("aria-hidden", "true");
+}
+
+function sanitizePhone(value) {
+  return value.replace(/\D/g, "").slice(0, 10);
+}
+
+async function saveLeadToGoogleSheets(phoneNumber) {
+  if (leadSaving) {
+    return;
+  }
+
+  if (GOOGLE_SHEETS_WEB_APP_URL === "PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") {
+    leadStatus.textContent = "Paste your Google Sheets web app URL in the script first.";
+    leadStatus.className = "lead-status error";
+    return;
+  }
+
+  leadSaving = true;
+  leadStatus.textContent = "Saving your number...";
+  leadStatus.className = "lead-status";
+
+  try {
+    const response = await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        phoneNumber,
+        route: activeLeadRoute,
+        price: activeLeadPrice,
+        source: "tranzito-webapp",
+        timestamp: new Date().toISOString()
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to save lead");
+    }
+
+    leadStatus.textContent = "Saved successfully.";
+    leadStatus.className = "lead-status success";
+    window.setTimeout(() => {
+      closeLeadModal();
+    }, 900);
+  } catch (error) {
+    leadStatus.textContent = "Could not save right now. Please try again.";
+    leadStatus.className = "lead-status error";
+  } finally {
+    leadSaving = false;
+  }
 }
 
 function renderRouteSlider() {
@@ -888,7 +1102,7 @@ function renderRouteSlider() {
           '<div class="route-name">' + route.name + '</div>' +
           '<div class="route-meta">' + route.meta + '</div>' +
           '<div class="route-footer">' +
-            '<button class="route-action" type="button" data-route="' + route.name + " - " + route.price + '">Pre Book Now</button>' +
+            '<button class="route-action" type="button" data-route-name="' + route.name + '" data-route-price="' + route.price + '">Pre Book Now</button>' +
           '</div>' +
         '</div>' +
       '</article>'
@@ -902,7 +1116,10 @@ function renderRouteSlider() {
 
   routeSlider.querySelectorAll(".route-action").forEach((button) => {
     button.addEventListener("click", () => {
-      openWA(button.getAttribute("data-route"));
+      openLeadModal(
+        button.getAttribute("data-route-name"),
+        button.getAttribute("data-route-price")
+      );
     });
   });
 
@@ -1022,6 +1239,31 @@ routeSlider.addEventListener("touchstart", pauseRouteAutoplay, { passive: true }
 routeSlider.addEventListener("mouseenter", stopRouteAutoplay);
 routeSlider.addEventListener("mouseleave", startRouteAutoplay);
 startRouteAutoplay();
+
+leadCloseBtn.addEventListener("click", closeLeadModal);
+leadModal.addEventListener("click", (event) => {
+  if (event.target === leadModal) {
+    closeLeadModal();
+  }
+});
+
+leadPhoneInput.addEventListener("input", () => {
+  leadPhoneInput.value = sanitizePhone(leadPhoneInput.value);
+
+  if (leadSaveTimeoutId) {
+    window.clearTimeout(leadSaveTimeoutId);
+  }
+
+  if (leadPhoneInput.value.length < 10) {
+    leadStatus.textContent = "";
+    leadStatus.className = "lead-status";
+    return;
+  }
+
+  leadSaveTimeoutId = window.setTimeout(() => {
+    saveLeadToGoogleSheets(leadPhoneInput.value);
+  }, 350);
+});
 
 window.addEventListener("load", () => {
   playIntro(priceScreen);
