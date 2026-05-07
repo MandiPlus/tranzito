@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>GCA x Tranzito Rates App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --app-width: 480px;
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-soft: #f0f2f5;
+  --text: #14161a;
+  --text-soft: #626872;
+  --line: #e4e8ee;
+  --red: #ee3c26;
+  --red-deep: #cf321f;
+  --green: #167a3f;
+  --blue: #102d6b;
+  --shadow: 0 18px 40px rgba(18, 28, 45, 0.08);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: "DM Sans", sans-serif;
+  background:
+    linear-gradient(180deg, #fbfbfc 0%, #f3f5f8 100%);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+button {
+  font: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.app {
+  width: min(100%, var(--app-width));
+  min-height: 100vh;
+  margin: 0 auto;
+  background: var(--bg);
+  position: relative;
+  box-shadow: 0 0 0 1px rgba(20, 22, 26, 0.03);
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 14px;
+  background: rgba(246, 247, 249, 0.94);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(20, 22, 26, 0.06);
+}
+
+.app-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+.app-subtitle {
+  font-size: 11px;
+  color: var(--text-soft);
+}
+
+.live-pill {
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(238, 60, 38, 0.1);
+  color: var(--red);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.screen {
+  display: none;
+  min-height: calc(100vh - 64px);
+  padding: 16px;
+}
+
+.screen.active {
+  display: block;
+}
+
+.primary-btn,
+.secondary-btn,
+.route-action {
+  width: 100%;
+  border: 0;
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.primary-btn {
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+}
+
+.splash-screen {
+  display: none;
+}
+
+.splash-screen.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.splash-wrap {
+  width: 100%;
+  padding-top: 6px;
+}
+
+.splash-card {
+  position: relative;
+  overflow: hidden;
+  padding: 28px 20px 32px;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at top left, rgba(22, 122, 63, 0.1), transparent 28%),
+    radial-gradient(circle at top right, rgba(16, 45, 107, 0.1), transparent 30%),
+    linear-gradient(180deg, #ffffff 0%, #f8f9fb 100%);
+  box-shadow: var(--shadow);
+}
+
+.splash-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 35%, rgba(255, 255, 255, 0.72) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: sweep 2s ease-in-out infinite;
+}
+
+@keyframes sweep {
+  0% { transform: translateX(-120%); }
+  55% { transform: translateX(120%); }
+  100% { transform: translateX(120%); }
+}
+
+.splash-topline {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.logos-stack {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.logo-card {
+  padding: 18px;
+  border-radius: 24px;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 28px rgba(18, 28, 45, 0.06);
+  opacity: 0;
+  transform: translateY(22px) scale(0.96);
+}
+
+.logo-card.show {
+  animation: logoIn 0.7s cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+.logo-card > * {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.logo-card.show > * {
+  animation: logoContentUp 0.65s cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+.logo-card.show > *:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.logo-card.show > *:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+@keyframes logoIn {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes logoContentUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gca-logo {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1 / 1;
+  width: 130px;
+  margin: 0 auto;
+  border: 4px solid var(--green);
+  border-radius: 50%;
+  color: var(--green);
+  position: relative;
+  transform-origin: center;
+}
+
+.logo-image-wrap {
+  display: grid;
+  place-items: center;
+  min-height: 228px;
+}
+
+.logo-image {
+  display: block;
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.logo-image.gca {
+  max-height: 210px;
+}
+
+.logo-image.tranzito {
+  max-height: 190px;
+}
+
+.gca-title {
+  margin-top: 4px;
+  text-align: center;
+  color: var(--green);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.logo-card.single-logo {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.progress-shell {
+  position: relative;
+  z-index: 1;
+  margin-top: 16px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #edf1f5;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--green) 0%, var(--red) 100%);
+  transition: width 3.2s linear;
+}
+
+.progress-copy {
+  margin-top: 12px;
+  text-align: center;
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.exclusive-copy {
+  position: relative;
+  z-index: 1;
+  margin-top: 14px;
+  text-align: center;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.price-screen {
+  padding-top: 12px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
+.section-card {
+  padding: 18px;
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.section-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(238, 60, 38, 0.08);
+  color: var(--red);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.section-title {
+  margin: 14px 0 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 30px;
+  line-height: 1.05;
+  letter-spacing: -0.8px;
+}
+
+.section-title span {
+  color: var(--red);
+}
+
+.section-copy {
+  margin: 10px 0 0;
+  color: var(--text-soft);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.date-row {
+  margin-top: 14px;
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.route-carousel {
+  position: relative;
+}
+
+.route-slider {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 2px 20px 10px 0;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.route-slider::-webkit-scrollbar {
+  display: none;
+}
+
+.route-slide {
+  flex: 0 0 calc(100% - 32px);
+  min-width: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.route-card {
+  min-height: 206px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+  box-shadow: 0 10px 28px rgba(18, 28, 45, 0.06);
+  display: flex;
+  flex-direction: column;
+}
+
+.route-card.featured {
+  border-color: rgba(238, 60, 38, 0.18);
+  background:
+    radial-gradient(circle at top right, rgba(238, 60, 38, 0.16), transparent 34%),
+    linear-gradient(180deg, #ffffff 0%, #fff7f5 100%);
+}
+
+.route-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.route-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(238, 60, 38, 0.08);
+  color: var(--red);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.route-price {
+  font-size: 25px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+}
+
+.route-name {
+  margin-top: 16px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 25px;
+  line-height: 1.08;
+  letter-spacing: -0.7px;
+  min-height: 56px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.route-meta {
+  margin-top: 10px;
+  color: var(--text-soft);
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 700;
+  min-height: 20px;
+}
+
+.route-footer {
+  margin-top: auto;
+  padding-top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+}
+
+.route-action {
+  min-height: 48px;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, var(--red) 0%, var(--red-deep) 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow: 0 12px 24px rgba(238, 60, 38, 0.18);
+}
+
+.route-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.route-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #d5dbe3;
+  cursor: pointer;
+  transition: width 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.route-dot.active {
+  width: 22px;
+  background: var(--red);
+}
+
+.overview-card {
+  margin-top: 14px;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.service-item {
+  overflow: hidden;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 24px rgba(18, 28, 45, 0.06);
+}
+
+.service-media {
+  position: relative;
+  height: 126px;
+  background: linear-gradient(180deg, #cad4e0 0%, #edf1f5 100%);
+}
+
+.service-media::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(17, 21, 26, 0.04), transparent 45%),
+    radial-gradient(circle at 80% 24%, rgba(255, 255, 255, 0.3), transparent 24%);
+}
+
+.service-media::after {
+  content: attr(data-scene);
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
+}
+
+.service-media.breakdown {
+  background:
+    linear-gradient(180deg, rgba(30, 51, 78, 0.18), rgba(30, 51, 78, 0.28)),
+    linear-gradient(135deg, #9faebe 0%, #d8dde4 100%);
+}
+
+.service-media.crossing {
+  background:
+    linear-gradient(180deg, rgba(18, 45, 87, 0.16), rgba(18, 45, 87, 0.24)),
+    linear-gradient(135deg, #b8c6d7 0%, #e5ebf2 100%);
+}
+
+.service-media.sealing {
+  background:
+    linear-gradient(180deg, rgba(45, 47, 54, 0.18), rgba(45, 47, 54, 0.28)),
+    linear-gradient(135deg, #cfd5dc 0%, #eef2f6 100%);
+}
+
+.service-media.tracking {
+  background:
+    linear-gradient(180deg, rgba(16, 122, 63, 0.12), rgba(16, 122, 63, 0.22)),
+    linear-gradient(135deg, #c2d0dc 0%, #ecf1f6 100%);
+}
+
+.service-media.transport {
+  background:
+    linear-gradient(180deg, rgba(82, 58, 27, 0.14), rgba(82, 58, 27, 0.24)),
+    linear-gradient(135deg, #c4ced9 0%, #edf1f5 100%);
+}
+
+.service-media.assistance {
+  background:
+    linear-gradient(180deg, rgba(55, 74, 94, 0.12), rgba(55, 74, 94, 0.24)),
+    linear-gradient(135deg, #c7d2dd 0%, #eef2f6 100%);
+}
+
+.service-glyph {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.84);
+  color: var(--green);
+  font-size: 22px;
+  box-shadow: 0 8px 16px rgba(18, 28, 45, 0.08);
+}
+
+.service-body {
+  padding: 14px 14px 16px;
+}
+
+.service-title {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.service-copy {
+  margin-top: 6px;
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+@media (min-width: 768px) {
+  .app {
+    width: min(100%, 560px);
+  }
+
+  .screen {
+    padding: 18px;
+  }
+
+  .hero-panel,
+  .section-card,
+  .splash-card {
+    border-radius: 28px;
+  }
+
+  .route-slide {
+    flex-basis: calc(100% - 48px);
+  }
+}
+
+@media (max-width: 420px) {
+  .route-slide {
+    flex-basis: calc(100% - 20px);
+  }
+
+  .route-card {
+    min-height: 198px;
+    padding: 16px;
+  }
+
+  .route-price {
+    font-size: 22px;
+  }
+
+  .route-name {
+    font-size: 22px;
+    min-height: 48px;
+  }
+
+  .overview-grid {
+    gap: 10px;
+  }
+
+  .service-media {
+    height: 108px;
+  }
+
+  .service-glyph {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .service-body {
+    padding: 12px;
+  }
+
+  .service-title {
+    font-size: 14px;
+  }
+
+  .service-copy {
+    font-size: 11px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="app-header">
+    <div class="app-brand">
+      <div class="app-title">GCA x Tranzito</div>
+      <div class="app-subtitle">Daily transport rates for Azadpur Mandi</div>
+    </div>
+    <div class="live-pill">LIVE</div>
+  </header>
+
+  <section id="splashScreen" class="screen splash-screen active" aria-hidden="false">
+    <div class="splash-wrap">
+      <div class="splash-card">
+        <div class="splash-topline">Trusted partners powering today's rates</div>
+
+        <div class="logos-stack">
+          <div class="logo-card single-logo" id="gcaCard">
+            <div class="logo-image-wrap">
+              <img
+                class="logo-image gca"
+                src="./assets/gca.jpeg"
+                alt="Green Coconut Association logo"
+              >
+            </div>
+          </div>
+
+          <div class="logo-card single-logo" id="tranzitoCard">
+            <div class="logo-image-wrap">
+              <img
+                class="logo-image tranzito"
+                src="./assets/tranzito.jpeg"
+                alt="Tranzito Pvt Ltd logo"
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="exclusive-copy">Exclusive for GCA Azadpur Buyer</div>
+
+        <div class="progress-shell">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-copy">Loading route-wise best prices...</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="priceScreen" class="screen price-screen" aria-hidden="true">
+    <div class="route-carousel">
+      <div class="route-slider" id="routeSlider" aria-label="Today's transport rates"></div>
+      <div class="route-dots" id="routeDots" aria-label="Route slider navigation"></div>
+    </div>
+
+    <div class="section-card overview-card">
+      <div class="section-tag">Company Overview</div>
+      <h2 class="section-title">What <span>we provide</span></h2>
+      <p class="section-copy">
+        After the rates list, buyers can clearly see what your companies handle from source pickup to final delivery at Azadpur.
+      </p>
+
+      <div class="overview-grid">
+        <div class="service-item">
+          <div class="service-media breakdown" data-scene="Emergency cover">
+            <div class="service-glyph">🛡</div>
+          </div>
+          <div class="service-body">
+            <div class="service-title">Engine Seized Cover</div>
+            <div class="service-copy">Emergency breakdown protection for long-route transport continuity.</div>
+          </div>
+        </div>
+        <div class="service-item">
+          <div class="service-media crossing" data-scene="Fast crossing support">
+            <div class="service-glyph">🚧</div>
+          </div>
+          <div class="service-body">
+            <div class="service-title">Immediate Crossing Cover</div>
+            <div class="service-copy">Faster transport clearance coordination to reduce route delays.</div>
+          </div>
+        </div>
+        <div class="service-item">
+          <div class="service-media sealing" data-scene="Safe cargo movement">
+            <div class="service-glyph">🔒</div>
+          </div>
+          <div class="service-body">
+            <div class="service-title">Vehicle Full Sealing</div>
+            <div class="service-copy">Safe and secure cargo movement with proper sealing support.</div>
+          </div>
+        </div>
+        <div class="service-item">
+          <div class="service-media tracking" data-scene="Real-time visibility">
+            <div class="service-glyph">📍</div>
+          </div>
+          <div class="service-body">
+            <div class="service-title">Live Vehicle Tracking</div>
+            <div class="service-copy">Real-time shipment visibility for buyers and coordinators.</div>
+          </div>
+        </div>
+        <div class="service-item">
+          <div class="service-media transport" data-scene="Full transport handling">
+            <div class="service-glyph">🚚</div>
+          </div>
+          <div class="service-body">
+            <div class="service-title">Tension-Free Full Transport</div>
+            <div class="service-copy">End-to-end transport handling from dispatch planning to mandi coordination.</div>
+          </div>
+        </div>
+        <div class="service-item">
+          <div class="service-media assistance" data-scene="24x7 ground help">
+            <div class="service-glyph">🛠</div>
+          </div>
+          <div class="service-body">
+            <div class="service-title">Roadside Assistance and Labour</div>
+            <div class="service-copy">24x7 ground support for loading, issues and roadside help.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<script>
+const splashScreen = document.getElementById("splashScreen");
+const priceScreen = document.getElementById("priceScreen");
+const progressFill = document.getElementById("progressFill");
+const gcaCard = document.getElementById("gcaCard");
+const tranzitoCard = document.getElementById("tranzitoCard");
+const routeSlider = document.getElementById("routeSlider");
+const routeDots = document.getElementById("routeDots");
+
+const introDuration = 3600;
+const routeData = [
+  {
+    badge: "Lowest Price Today",
+    price: "Rs 145,000",
+    name: "Maddur to Azadpur Mandi Delhi",
+    meta: "25 Ton",
+    featured: true
+  },
+  {
+    badge: "Popular Route",
+    price: "Rs 148,000",
+    name: "Channryapatna to Azadpur Mandi Delhi",
+    meta: "25 Ton",
+    featured: false
+  }
+];
+
+let activeRouteIndex = 0;
+let routeAutoplayId = null;
+let routeResumeId = null;
+
+function showScreen(screenToShow) {
+  [splashScreen, priceScreen].forEach((screen) => {
+    const isActive = screen === screenToShow;
+    screen.classList.toggle("active", isActive);
+    screen.setAttribute("aria-hidden", String(!isActive));
+  });
+}
+
+function setTodayDate() {
+  return new Date().toLocaleDateString("en-IN", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
+}
+
+function openWA(route) {
+  const phone = "9971100101";
+  window.location.href = "tel:" + phone;
+}
+
+function renderRouteSlider() {
+  routeSlider.innerHTML = routeData.map((route) => {
+    const featuredClass = route.featured ? " featured" : "";
+    return (
+      '<article class="route-slide">' +
+        '<div class="route-card' + featuredClass + '">' +
+          '<div class="route-head">' +
+            '<div class="route-badge">' + route.badge + '</div>' +
+            '<div class="route-price">' + route.price + '</div>' +
+          '</div>' +
+          '<div class="route-name">' + route.name + '</div>' +
+          '<div class="route-meta">' + route.meta + '</div>' +
+          '<div class="route-footer">' +
+            '<button class="route-action" type="button" data-route="' + route.name + " - " + route.price + '">Pre Book Now</button>' +
+          '</div>' +
+        '</div>' +
+      '</article>'
+    );
+  }).join("");
+
+  routeDots.innerHTML = routeData.map((route, index) => {
+    const current = index === 0 ? " active" : "";
+    return '<button class="route-dot' + current + '" type="button" aria-label="Go to route ' + (index + 1) + '" data-index="' + index + '"></button>';
+  }).join("");
+
+  routeSlider.querySelectorAll(".route-action").forEach((button) => {
+    button.addEventListener("click", () => {
+      openWA(button.getAttribute("data-route"));
+    });
+  });
+
+  routeDots.querySelectorAll(".route-dot").forEach((dot) => {
+    dot.addEventListener("click", () => {
+      goToRouteSlide(Number(dot.getAttribute("data-index")), true);
+    });
+  });
+}
+
+function updateRouteDots(index) {
+  activeRouteIndex = index;
+  routeDots.querySelectorAll(".route-dot").forEach((dot, dotIndex) => {
+    dot.classList.toggle("active", dotIndex === index);
+  });
+}
+
+function goToRouteSlide(index, userInitiated) {
+  const slides = routeSlider.querySelectorAll(".route-slide");
+  if (!slides.length) {
+    return;
+  }
+
+  const safeIndex = (index + slides.length) % slides.length;
+  slides[safeIndex].scrollIntoView({
+    behavior: "smooth",
+    inline: "start",
+    block: "nearest"
+  });
+  updateRouteDots(safeIndex);
+
+  if (userInitiated) {
+    pauseRouteAutoplay();
+  }
+}
+
+function syncRouteIndexFromScroll() {
+  const slides = routeSlider.querySelectorAll(".route-slide");
+  if (!slides.length) {
+    return;
+  }
+
+  const sliderLeft = routeSlider.getBoundingClientRect().left;
+  let closestIndex = 0;
+  let smallestDistance = Number.POSITIVE_INFINITY;
+
+  slides.forEach((slide, index) => {
+    const distance = Math.abs(slide.getBoundingClientRect().left - sliderLeft);
+    if (distance < smallestDistance) {
+      smallestDistance = distance;
+      closestIndex = index;
+    }
+  });
+
+  updateRouteDots(closestIndex);
+}
+
+function startRouteAutoplay() {
+  stopRouteAutoplay();
+  routeAutoplayId = window.setInterval(() => {
+    goToRouteSlide(activeRouteIndex + 1, false);
+  }, 3000);
+}
+
+function stopRouteAutoplay() {
+  if (routeAutoplayId) {
+    window.clearInterval(routeAutoplayId);
+    routeAutoplayId = null;
+  }
+}
+
+function pauseRouteAutoplay() {
+  stopRouteAutoplay();
+  if (routeResumeId) {
+    window.clearTimeout(routeResumeId);
+  }
+  routeResumeId = window.setTimeout(() => {
+    startRouteAutoplay();
+  }, 4500);
+}
+
+function resetSplash() {
+  gcaCard.classList.remove("show");
+  tranzitoCard.classList.remove("show");
+  progressFill.style.transition = "none";
+  progressFill.style.width = "0";
+}
+
+function playIntro(nextScreen) {
+  resetSplash();
+  showScreen(splashScreen);
+
+  window.setTimeout(() => {
+    gcaCard.classList.add("show");
+  }, 180);
+
+  window.setTimeout(() => {
+    tranzitoCard.classList.add("show");
+  }, 560);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      progressFill.style.transition = "width 3.2s linear";
+      progressFill.style.width = "100%";
+    });
+  });
+
+  window.setTimeout(() => {
+    showScreen(nextScreen);
+  }, introDuration);
+}
+
+renderRouteSlider();
+routeSlider.addEventListener("scroll", syncRouteIndexFromScroll, { passive: true });
+routeSlider.addEventListener("pointerdown", pauseRouteAutoplay);
+routeSlider.addEventListener("touchstart", pauseRouteAutoplay, { passive: true });
+routeSlider.addEventListener("mouseenter", stopRouteAutoplay);
+routeSlider.addEventListener("mouseleave", startRouteAutoplay);
+startRouteAutoplay();
+
+window.addEventListener("load", () => {
+  playIntro(priceScreen);
+});
+</script>
+</body>
+</html>
