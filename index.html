@@ -936,7 +936,6 @@ button {
   </section>
 </div>
 
-<!--
 <div class="lead-modal" id="leadModal" aria-hidden="true">
   <div class="lead-panel">
     <div class="lead-top">
@@ -975,7 +974,6 @@ button {
   <input type="hidden" name="source" value="tranzito-webapp">
   <input type="hidden" name="timestamp" id="leadTimestampField">
 </form>
--->
 
 <script>
 const splashScreen = document.getElementById("splashScreen");
@@ -985,7 +983,6 @@ const gcaCard = document.getElementById("gcaCard");
 const tranzitoCard = document.getElementById("tranzitoCard");
 const routeSlider = document.getElementById("routeSlider");
 const routeDots = document.getElementById("routeDots");
-/*
 const leadModal = document.getElementById("leadModal");
 const leadCloseBtn = document.getElementById("leadCloseBtn");
 const leadPhoneInput = document.getElementById("leadPhoneInput");
@@ -996,7 +993,6 @@ const leadPhoneField = document.getElementById("leadPhoneField");
 const leadRouteField = document.getElementById("leadRouteField");
 const leadPriceField = document.getElementById("leadPriceField");
 const leadTimestampField = document.getElementById("leadTimestampField");
-*/
 
 const introDuration = 3600;
 const routeData = [
@@ -1019,13 +1015,11 @@ const routeData = [
 let activeRouteIndex = 0;
 let routeAutoplayId = null;
 let routeResumeId = null;
-/*
 let activeLeadRoute = "";
 let activeLeadPrice = "";
 let leadSaveTimeoutId = null;
 let leadSaving = false;
 let leadSaved = false;
-*/
 
 function showScreen(screenToShow) {
   [splashScreen, priceScreen].forEach((screen) => {
@@ -1044,11 +1038,6 @@ function setTodayDate() {
   });
 }
 
-function openCall() {
-  window.location.href = "tel:8074086638";
-}
-
-/*
 function openLeadModal(route, price) {
   activeLeadRoute = route;
   activeLeadPrice = price;
@@ -1089,7 +1078,7 @@ async function saveLeadToGoogleSheets(phoneNumber) {
     leadTimestampField.value = new Date().toISOString();
     leadForm.submit();
     leadSaved = true;
-    leadStatus.textContent = "Saved successfully.";
+    leadStatus.textContent = "Saved successfully. Our team will contact you soon.";
     leadStatus.className = "lead-status success";
     window.setTimeout(() => {
       closeLeadModal();
@@ -1101,7 +1090,6 @@ async function saveLeadToGoogleSheets(phoneNumber) {
     leadSaving = false;
   }
 }
-*/
 
 function renderRouteSlider() {
   routeSlider.innerHTML = routeData.map((route) => {
@@ -1130,7 +1118,10 @@ function renderRouteSlider() {
 
   routeSlider.querySelectorAll(".route-action").forEach((button) => {
     button.addEventListener("click", () => {
-      openCall();
+      openLeadModal(
+        button.getAttribute("data-route-name"),
+        button.getAttribute("data-route-price")
+      );
     });
   });
 
@@ -1251,7 +1242,6 @@ routeSlider.addEventListener("mouseenter", stopRouteAutoplay);
 routeSlider.addEventListener("mouseleave", startRouteAutoplay);
 startRouteAutoplay();
 
-/*
 leadCloseBtn.addEventListener("click", closeLeadModal);
 leadModal.addEventListener("click", (event) => {
   if (event.target === leadModal) {
@@ -1276,7 +1266,6 @@ leadPhoneInput.addEventListener("input", () => {
     saveLeadToGoogleSheets(leadPhoneInput.value);
   }, 350);
 });
-*/
 
 window.addEventListener("load", () => {
   playIntro(priceScreen);
